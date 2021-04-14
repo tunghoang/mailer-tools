@@ -1,0 +1,21 @@
+advisors
+
+mails
+http://fit.uet.vnu.edu.vn/__db-mailer/mails/
+
+Schema {
+idMail pk int
+application string
+receipient string
+subject
+content
+sent boolean
+queueTime DateTime
+sentTime
+}
+
+put delete
+http://fit.uet.vnu.edu.vn/__db-mailer/mails/{id}
+
+
+passWifi: doge: 18511555

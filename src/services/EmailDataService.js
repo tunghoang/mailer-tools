@@ -2,23 +2,23 @@ import http from "../http-common";
 
 const EmailDataService = {
   getAll: function() {
-    return http.get("/emails");
+    return http.get("/__db-mailer/mails/");
   },
 
   get: function(id) {
-    return http.get(`/emails/${id}`);
+    return http.put(`/__db-mailer/mails/${id}`, { idMail: id });
   },
 
   create: function(data) {
-    return http.post("/emails", data);
+    return http.post("/__db-mailer/mails/", data);
   },
 
   update: function(id, data) {
-    return http.put(`/emails/${id}`, data);
+    return http.put(`/__db-mailer/mails/${id}`, data);
   },
 
   delete: function(id) {
-    return http.delete(`/emails/${id}`);
+    return http.delete(`/__db-mailer/mails/${id}`);
   },
 
   deleteInTable: function(res) {
@@ -27,7 +27,7 @@ const EmailDataService = {
   },
 
   findBySubject: function(subject) {
-    return http.get(`/emails?subject=${subject}`);
+    return http.put(`/__db-mailer/mails/`, subject);
   }
 }
 

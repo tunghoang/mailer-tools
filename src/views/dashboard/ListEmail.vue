@@ -1,5 +1,6 @@
 <template>
   <div class="list_email row d-flex justify-content-center">
+
     <div class="col-md-8">
       <div class="input-group mb-3">
         <input type="text" class="form-control" placeholder="Search by subject"
@@ -23,7 +24,7 @@
         Remove All
       </button>
 
-      <input type="text" class="form-control" placeholder="Search by receiver"
+      <input type="text" class="form-control" placeholder="Search by receipient"
          v-model="searchReceiver" />
 
       </div>
@@ -31,12 +32,12 @@
         <thead class="thead-inverse thead-dark">
           <tr>
             <th>ID</th>
-            <th>Receiver</th>
+            <th>Receipient</th>
             <th>Subject</th>
             <th>Content</th>
             <th>Queue at</th>
             <th>Sent at</th>
-            <th>Sent status</th>
+            <th>Sent</th>
             <th></th>
           </tr>
         </thead>
@@ -46,18 +47,38 @@
           :key="index" 
           >
             <td>{{index}}</td>
-            <td>{{email.receiver}}</td>
-            <td>{{email.subject}}</td>
+            <td class="wrap">{{email.receipient}}</td>
+            <td class="wrap">{{email.subject}}</td>
             <td class="wrap">{{email.content}}</td>
-            <td>{{email.composeAt}}</td>
-            <td>{{email.sentAt}}</td>
+            <td>{{email.queueTime}}</td>
+            <td>{{email.sentTime}}</td>
             <td>{{email.sent}}</td>
             <div :style="{margin: '10px'}">
-              <a class="btn btn-info btn-sm" :href="'/emails/' + email.id">Edit</a>
+              <a class="btn btn-info btn-sm mb-1" @click="reSend(email.idMail)">Resend</a>
+              <a class="btn btn-info btn-sm" :href="'/emails/' + email.idMail">Edit</a>
             </div>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="pagination-container">
+      <ul class="pagination-btn">
+        <li>
+          <button type="button" :class="['btn btn-primary' ]" value="prev"
+          @click="changePage" :disabled="this.currentPage == 0 ? true : false">
+            Previous
+          </button>
+        </li>
+
+        <li>
+          <button type="button" :class="'btn btn-primary'" value="next"
+          @click="changePage" :disabled="this.currentPage >= (this.allMails.length / this.mailsPerPage - 1) ? true : false ">
+            Next
+          </button>
+        </li>
+      </ul>
+      <div class="ml-6 mb-4">{{ this.currentPage * this.mailsPerPage }}-{{ this.currentPage * this.mailsPerPage + this.mailsPerPage }} of {{ this.allMails.length }}</div>
     </div>
   </div>
 </template>
@@ -69,16 +90,21 @@ export default {
   name: "emails-list",
   data() {
     return {
+      allMails: [],
       emails: [],
       subject: "",
-      searchReceiver: null
+      searchReceiver: null,
+      currentPage: 0,
+      mailsPerPage: 10
     };
   },
   methods: {
-    retrieveEmails() { //get all email
+    // Get all email
+    retrieveEmails() { 
       EmailDataService.getAll()
         .then(response => {
-          this.emails = response.data;
+          this.allMails = response.data;
+          this.emails = this.allMails.slice(0, this.mailsPerPage);
           console.log(response.data);
         })
         .catch(e => {
@@ -91,10 +117,10 @@ export default {
     },
 
     removeAllEmails() { //delete all emails
-      let emails = this.resultReceiver;
-      emails = emails.map(email => email.id)
-      emails.forEach(email => {
-        EmailDataService.delete(email) //* get res done!
+      let email = this.resultReceiver;
+      email = email.map(e => e.idMail)
+      email.forEach(e => {
+        EmailDataService.delete(e) //* get res done!
         .then(response => {
           console.log(response.data);
           this.refreshList();
@@ -106,15 +132,50 @@ export default {
 
     },
     
-    searchSubject() { //search by subject
-      EmailDataService.findBySubject(this.subject)
+    // Search by subject
+    searchSubject() {
+      let subjectToSearch = this.subject == "" ? {} : { subject: this.subject }
+      EmailDataService.findBySubject(subjectToSearch)
         .then(response => {
-          this.emails = response.data;
+          this.allMails = response.data;
           console.log(response.data);
+          this.paginate();
         })
         .catch(e => {
           console.log(e);
         });
+    },
+
+    // Set sent status to false
+    reSend(idMail) {
+      EmailDataService.update(idMail, { sent: false })
+      .then(response => {
+        console.log(response);
+        let foundIndex = this.emails.findIndex(mail => mail.idMail == idMail)
+        this.emails[foundIndex].sent = false;
+      })
+    },
+
+    // Pagination
+    paginate() {
+      this.currentPage = 0;
+      let indexMail = this.currentPage * this.mailsPerPage;
+      this.emails = this.allMails.slice(indexMail, indexMail + this.mailsPerPage);
+    },
+
+    // Change page
+    changePage(e) {
+      if (e.target.value == "prev") {
+        console.log('Prev');
+        this.currentPage--;
+        let mailStart = this.currentPage * this.mailsPerPage;
+        this.emails = this.allMails.slice(mailStart, mailStart + this.mailsPerPage)
+      } else if (e.target.value == "next") {
+        console.log('Next');
+        this.currentPage++;
+        let mailStart = this.currentPage * this.mailsPerPage;
+        this.emails = this.allMails.slice(mailStart, mailStart + this.mailsPerPage)
+      }
     }
   },
   
@@ -122,14 +183,15 @@ export default {
     resultReceiver() {
       if (this.searchReceiver) {
         const res = this.emails.filter((email)=> this.searchReceiver.toLowerCase().split(' ')
-                                          .every(v => email.receiver.toLowerCase().includes(v))
+                                          .every(v => email.receipient.toLowerCase().includes(v))
         )
         return res
-        } else {
-          return this.emails;
-        }
+      } else {
+        return this.emails;
       }
+    }
   },
+
   mounted() {
     this.retrieveEmails();
   }
@@ -139,8 +201,8 @@ export default {
 <style scoped>
 .list_email {
   text-align: left;
-  /* max-width: 750px; */
-  /* padding: 20px; */
+  flex-direction: column;
+  align-items: center;
 }
 
 .button button {
@@ -153,6 +215,25 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   max-width: 200px;
+}
+
+.btn {
+  color: #fff;
+}
+
+.pagination-btn {
+  display: flex;
+  list-style: none;
+}
+
+.pagination-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pagination-btn li {
+  margin: 0 2px;
 }
 
 </style>

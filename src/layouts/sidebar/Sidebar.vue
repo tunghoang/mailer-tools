@@ -110,6 +110,7 @@ export default {
 };
 </script>
 <style lang="scss">
+
 #main-sidebar {
   box-shadow: 1px 0 20px rgba(0, 0, 0, 0.08);
   -webkit-box-shadow: 1px 0 20px rgba(0, 0, 0, 0.08);

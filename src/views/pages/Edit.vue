@@ -6,7 +6,7 @@
       <div class="form-group">
         <label for="receiver">Receiver</label>
         <input type="text" class="form-control" id="receiver"
-          v-model="currentEmail.receiver"
+          v-model="currentEmail.receipient"
         />
       </div>
       <div class="form-group">
@@ -23,16 +23,16 @@
       </div>
 
       <div class="form-group">
-        <label for="compose-at">Compose at</label>
+        <label for="compose-at">Queue Time</label>
         <input type="text" class="form-control" id="compose-at"
-          v-model="currentEmail.composeAt"
+          v-model="currentEmail.queueTime"
         />
       </div>
 
       <div class="form-group">
         <label for="sent-at">Sent at</label>
         <input type="text" class="form-control" id="sent-at"
-          v-model="currentEmail.sentAt"
+          v-model="currentEmail.sentTime"
         />
       </div>
 
@@ -46,13 +46,13 @@
       v-if="currentEmail.sent"
       @click="updateSent(false)"
     >
-      Unsent
+      Resent
     </button>
-    <button v-else class="btn btn-primary btn-sm mr-2"
+    <!-- <button v-else class="btn btn-primary btn-sm mr-2"
       @click="updateSent(true)"
     >
       Sent
-    </button>
+    </button> -->
 
     <button class="btn btn-danger btn-sm mr-2"
       @click="deleteEmail"
@@ -88,6 +88,7 @@ export default {
   },
   methods: {
     getEmail(id) {
+      console.log(id);  
       EmailDataService.get(id)
         .then(response => {
           this.currentEmail = response.data;
@@ -100,16 +101,15 @@ export default {
 
     updateSent(status) {
       var data = {
-        id: this.currentEmail.id,
-        receiver: this.currentEmail.receiver,
+        idMail: this.currentEmail.idMail,
+        receipient: this.currentEmail.receiver,
         subject: this.currentEmail.subject,
         content: this.currentEmail.content,
-        composeAt: this.currentEmail.composeAt,
-        sentAt: this.currentEmail.sentAt,
-        sent: status
+        queueTime: new Date().toISOString().split(".")[0],
+        sent: false
       };
 
-      EmailDataService.update(this.currentEmail.id, data)
+      EmailDataService.update(this.currentEmail.idMail, data)
         .then(response => {
           this.currentEmail.sent = status;
           console.log(response.data);
@@ -120,7 +120,7 @@ export default {
     },
 
     updateEmail() {
-      EmailDataService.update(this.currentEmail.id, this.currentEmail)
+      EmailDataService.update(this.currentEmail.idMail, this.currentEmail)
         .then(response => {
           console.log(response.data);
           this.message = 'The email was updated successfully!';
@@ -131,10 +131,10 @@ export default {
     },
 
     deleteEmail() {
-      EmailDataService.delete(this.currentEmail.id)
+      EmailDataService.delete(this.currentEmail.idMail)
         .then(response => {
           console.log(response.data);
-          this.$router.push({ name: "emails" });
+          this.$router.push({ name: "ListEmail" });
         })
         .catch(e => {
           console.log(e);
@@ -150,7 +150,11 @@ export default {
 
 <style scoped>
 .edit-form {
-  max-width: 300px;
+  width: 70%;
   margin: auto;
+}
+
+.btn {
+  color: #fff;
 }
 </style>

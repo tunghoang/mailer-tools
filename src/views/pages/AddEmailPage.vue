@@ -6,11 +6,11 @@
           <div class="form-group">
             <label for="receiver">Recipient</label>
             <div style="display: flex">
-              <select class="btn" name="receiver" id="receiver" v-model="receiver">
-                <option v-for="(user, index) in users" :key="index" 
-                :value="user.username.toString()">{{ user.username }}</option>
+              <select class="btn" name="receiver" id="receiver" v-model="advisorName">
+                <option v-for="(advisor, index) in advisors" :key="index" 
+                :value="advisor.fullname">{{ advisor.fullname }}</option>
               </select>
-              <button class="btn btn-primary" @click="addReceiver">Add</button>
+              <button class="btn btn-primary" @click="addReceipient">Add</button>
             </div>
           </div>
 
@@ -37,7 +37,7 @@
             />
           </div>
 
-          <button @click="saveEmail" class="btn btn-success">Send</button>
+          <button @click="sendEmail" class="btn btn-success">Send</button>
 
           <button class="m-3 btn btn-sm btn-danger">
             <router-link to="/" class="nav-link" :style="{ color: 'white'}">Go back home</router-link>
@@ -54,17 +54,12 @@
       <div v-if="addedUser" class="list">
         <h2>Recipient List</h2>
         <div class="receiver_list">
-            <button class="btn btn-primary mr-1 mt-1" 
-            v-for="(email, index) in emailArray" 
+            <div class="mr-1 mt-1" 
+            v-for="(receipient, index) in receipientList" 
             :key="index"
-            :value="email.address"
-            @click="user_info">
-              {{ email.address }}
-            </button>
-
-            <div v-if="show" class="email_info">
-              <p><b>Name</b>: {{ user.username }}</p>
-              <p><b>Address</b>: {{ user.address }}</p>
+            :value="receipient.email">
+              <span class="advisorEmail"> {{ receipient.email }} </span>
+              <button class="btn btn-danger ml-1" @click="removeReceipient" :value="receipient.email">Remove</button>
             </div>
 
         </div>
@@ -78,50 +73,38 @@
 import EmailDataService from "../../services/EmailDataService";
 import UserDataService from "../../services/UserDataService";
 const Mustache = require('mustache');
+import advisors from '../../assets/advisors.json';
 
 export default {
   name: "add-email",
   data() {
     return {
       addedUser: false,
-      receiver: "",
-      address: "",
+      advisorName: "",
       subject: "",
       content: "",
       submitted: false,
-      emailArray: [],
-      users: [],
-      user: null,
-      show: false,
+      receipientList: [],
+      advisors: [],
     };
   },
   methods: {
-    saveEmail() {
-      var today = new Date();
-      var hh = String(today.getHours()).padStart(2, '0')
-      var mn = String(today.getMinutes()).padStart(2, '0')
-      var ss = String(today.getSeconds()).padStart(2, '0')
-      var dd = String(today.getDate()).padStart(2, '0');
-      var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-      var yyyy = today.getFullYear();
-
-      today = hh + ':' + mn + ':' + ss + ' ' + mm + '/' + dd + '/' + yyyy;
-
+    sendEmail() {
       // Send 1 email
-      if (this.emailArray.length == 0) {
+      if (this.receipientList.length == 0) {
         alert('No user has been chosen!')
       }
 
       // Send many email
       else {
-        this.emailArray.forEach(email => {
+        this.receipientList.forEach(email => {
           let content = Mustache.render(this.content, email);
           let data = {
-            receiver: email.Name,
-            address: email.address,
+            receipient: email.address,
             subject: this.subject,
             content: content,
-            composeAt: today
+            queueTime: new Date().toISOString().split(".")[0],
+            sent: false
           };
 
           EmailDataService.create(data)
@@ -133,71 +116,52 @@ export default {
             console.log(e);
           });
         });
-      }
 
-      this.emailArray  = [];
-      this.receiver = '';
-      this.address = '';
-      this.subject = '';
-      this.content = '';
-      this.addedUser = false;
-      this.submitted = false;
+        // Reset state
+        this.addedUser = false;
+        this.advisorName = "";
+        this.subject = "";
+        this.content = "";
+        this.submitted = false;
+        this.receipientList = [];
+        this.advisors = [];
+      }
     },
     
     newEmail() {
       this.submitted = false;
     },
 
-    addReceiver() {
-      let receiver = this.receiver;
-      let check = false;
-      if (!receiver) return;
+    addReceipient() {
       this.addedUser = true;
-      this.emailArray.forEach(email => {
-        if (email.receiver == receiver)  {
-          check = true;
+      let fullname = this.advisorName;
+      if (fullname == "") {
+        alert('Choose advisor name first!')
+      } else {
+        let index = this.receipientList.findIndex(receopient => receopient.fullname == fullname);
+        let exist = index >= 0 ? true : false;
+        
+        if (!exist) {
+          index = this.advisors.findIndex(advisor => advisor.fullname == fullname);
+          this.receipientList.push(advisors[index]);
         }
-      })
-      this.users.forEach(user => {
-        if (user.username == receiver) {
-          this.address = user.address;
-        }
-      })
-      !check && this.emailArray.push({
-        Name: receiver,
-        address: this.address,
-        content: `Dear ${receiver}, `
-      })
-      this.receiver = "";
-      this.address = "";
-      console.log(this.emailArray)
+
+        this.advisorName = "";
+      }
+    },
+
+    removeReceipient(e) {
+      console.log(e.target.value);
+      let index = this.receipientList.findIndex(receipient => receipient.email == e.target.value);
+      this.receipientList.splice(index, 1);
     },
 
     getAllUsers() {
-      UserDataService.getAll()
-        .then(response => {
-          this.users = response.data;
-          console.log(response.data);
-        })
-        .catch(e => {
-          console.log(e);
-        });
+      this.advisors = advisors;
+      console.log(advisors)
     },
-    getUserById(id) {
-      UserDataService.get(id)
-      .then(response => {
-        this.user = response.data;
-      })
-    },
-    user_info(event) {
-      this.show = !this.show;
-      this.users.forEach(user => {
-        if (user.address == event.target.value) {
-          this.user = user;
-        }
-      })
-    }
   },
+
   mounted() {
     this.getAllUsers();
   }
@@ -242,5 +206,17 @@ export default {
   border: 1px solid rgb(219, 205, 205);
   border-radius: 10px;
   padding: 10px;
+}
+
+.advisorEmail {
+  border: 1px solid #333;
+  border-radius: 6px;
+  background-color: #007bff;
+  color: #fff;
+  padding: 6px 10px 8px 10px;
+}
+
+.btn {
+  border-radius: 6px;
 }
 </style>
