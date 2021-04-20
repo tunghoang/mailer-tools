@@ -1,12 +1,14 @@
-import http from "../http-common";
+import axios from 'axios';
 
 const UserDataService = {
-  getAll: function() {
-    return http.get("/users");
-  },
-
-  get: function(id) {
-    return http.get(`/users/${id}`);
+  request: function(url, method = "GET", body = null , headers = null) {
+    return axios({
+      method: method,
+      url: url,
+      data: body,
+      headers: headers,
+      withCredentials: true
+    });
   },
 }
 

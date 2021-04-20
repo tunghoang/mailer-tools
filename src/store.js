@@ -8,7 +8,8 @@ export default new Vuex.Store({
         Sidebar_drawer: null,
         Customizer_drawer: false,
         SidebarColor: 'white',
-        SidebarBg: ''
+        SidebarBg: '',
+        LoggedIn: true
       },
     mutations: {
         SET_SIDEBAR_DRAWER (state, payload) {
@@ -19,7 +20,11 @@ export default new Vuex.Store({
         },
         SET_SIDEBAR_COLOR (state, payload) {
             state.SidebarColor = payload
-        }, 
+        },
+
+        HandleLogIn (state) {
+            state.LoggedIn = !state.LoggedIn
+        },
     },
     actions: {
 

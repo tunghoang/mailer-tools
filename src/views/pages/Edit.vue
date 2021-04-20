@@ -142,6 +142,10 @@ export default {
     }
   },
   mounted() {
+    if (!this.$store.state.LoggedIn) {
+      this.$router.push('/sign-in');
+      return;
+    }
     this.message = '';
     this.getEmail(this.$route.params.id);
   }

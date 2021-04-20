@@ -38,7 +38,7 @@
             <th>Queue at</th>
             <th>Sent at</th>
             <th>Sent</th>
-            <th></th>
+            <th style="min-width:75px;">Actions</th>
           </tr>
         </thead>
         <tbody >
@@ -54,8 +54,14 @@
             <td>{{email.sentTime}}</td>
             <td>{{email.sent}}</td>
             <div :style="{margin: '10px'}">
-              <a class="btn btn-info btn-sm mb-1" @click="reSend(email.idMail)">Resend</a>
-              <a class="btn btn-info btn-sm" :href="'/emails/' + email.idMail">Edit</a>
+              <a class="v-icon mdi mdi-email-send-outline"
+                data-toggle="tooltip" data-placement="bottom" title="Resend" 
+                @click="reSend(email.idMail)"
+              ></a>
+              <a class="v-icon mdi mdi-square-edit-outline"
+                data-toggle="tooltip" data-placement="bottom" title="Edit"
+                :href="'/pages/emails/' + email.idMail"
+              ></a>
             </div>
           </tr>
         </tbody>
@@ -85,6 +91,7 @@
 
 <script>
 import EmailDataService from "../../services/EmailDataService";
+import Cookies from 'js-cookie';
 
 export default {
   name: "emails-list",
@@ -102,10 +109,18 @@ export default {
     // Get all email
     retrieveEmails() { 
       EmailDataService.getAll()
-        .then(response => {
+        .then( async (response) => {
           this.allMails = response.data;
+          await this.allMails.sort(function(a, b) {
+            if (a.sentTime == null) return -1;
+            else if (b.sentTime == null) return 1;
+            else {
+              let sentTimeA = new Date(a.sentTime).getTime();
+              let sentTimeB = new Date(b.sentTime).getTime();
+              return sentTimeB - sentTimeA;
+            }
+          });
           this.emails = this.allMails.slice(0, this.mailsPerPage);
-          console.log(response.data);
         })
         .catch(e => {
           console.log(e);
@@ -182,10 +197,10 @@ export default {
   computed: {
     resultReceiver() {
       if (this.searchReceiver) {
-        const res = this.emails.filter((email)=> this.searchReceiver.toLowerCase().split(' ')
+        let res = this.allMails.filter((email)=> this.searchReceiver.toLowerCase().split(' ')
                                           .every(v => email.receipient.toLowerCase().includes(v))
         )
-        return res
+        return res;
       } else {
         return this.emails;
       }
@@ -193,6 +208,10 @@ export default {
   },
 
   mounted() {
+    if (Cookies.get('jwt') == null || Cookies.get('key') == null) {
+      this.$router.push('/sign-in');
+      return;
+    }
     this.retrieveEmails();
   }
 };

@@ -28,7 +28,11 @@
       </template>
 
       <v-list>
-        <v-list-item v-for="(item, i) in userprofile" :key="i" @click="href">
+        <v-list-item 
+          v-for="(item, i) in userprofile"
+          :key="i" 
+          v-on="item.action == 'logOut' ? { click: logOut } : null"
+        >
           <v-list-item-title>{{ item.title }}</v-list-item-title>
         </v-list-item>
       </v-list>
@@ -38,6 +42,8 @@
 <script>
 // Utilities
 import { mapState, mapMutations } from "vuex";
+import Cookies from 'js-cookie';
+
 export default {
   name: "Header",
 
@@ -55,11 +61,8 @@ export default {
       { title: "My Balance" },
       { title: "Inbox" },
       { title: "Account Setting" },
-      { title: "Logout" },
+      { title: "Logout", action: "logOut" },
     ],
-    href() {
-      return undefined;
-    },
   }),
 
   computed: {
@@ -70,6 +73,14 @@ export default {
     ...mapMutations({
       setSidebarDrawer: "SET_SIDEBAR_DRAWER",
     }),
+
+    logOut() {
+      console.log('logged out');
+      Cookies.remove('jwt');
+      Cookies.remove('key');
+      this.$store.commit('HandleLogIn');
+      this.$router.push('/sign-in');
+    }
   },
 };
 </script>

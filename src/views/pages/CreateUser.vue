@@ -1,42 +1,69 @@
 <template>
   <div class="create-box">
-      <form action="http://localhost:8080/api/users/create-user" method="POST">
+      <form @action.prevent="onSubmit">
         <div class="form-group">
-            <label for="username"><b>Username</b></label>
-            <input type="text" class="form-control" name="username" id="username"
-            v-model="username"
+            <label for="email"><b>Email</b></label>
+            <input type="email" class="form-control" name="email" id="email"
+            v-model="email"
             />
         </div>
         <div class="form-group">
-            <label for="address"><b>Email Address</b></label>
-            <input type="text" class="form-control" name="address" id="address"
-            v-model="password"
+            <label for="fullName"><b>Full name</b></label>
+            <input type="text" class="form-control" name="fullName" id="fullName"
+            v-model="fullName"
+            />
+        </div>
+        <div class="form-group">
+            <label for="idQuote"><b>idQuota</b></label>
+            <input type="text" class="form-control" name="idQuota" id="idQuota"
+            v-model="idQuota"
+            />
+        </div>
+        <div class="form-group">
+            <label for="idGueatAdvisor"><b>idGueatAdvisor</b></label>
+            <input type="text" class="form-control" name="idGueatAdvisor" id="idGueatAdvisor"
+            v-model="idGueatAdvisor"
             />
         </div>
 
-        <button class="btn btn-primary" type="submit" @click="onSubmit">Create</button>
+        <button class="btn btn-primary" @click="onSubmit">Create</button>
     </form>
 
   </div>
 </template>
 
 <script>
+import UserDataService from "../../services/UserDataService";
+
 export default {
     name: "login",
     data() {
         return {
-            username: "",
-            emaul_address: ""
+            email: "",
+            fullName: "",
+            idQuota: null,
+            idGueatAdvisor: null
         };
     },
     methods: {
-        onSubmit() {
-            // event.preventDefault();
-            console.log(this.username + " " + this.password);
+        onSubmit(event) {
+            event.preventDefault();
+            let body = {
+                email: this.email,
+                fullname: this.fullName,
+                idQuota: this.idQuota,
+                idGuestAdvisor: this.idGuestAdvisor
+            };
+            UserDataService.request(
+                "http://localhost:8000/advisors/",
+                "POST",
+                body
+            ).then(response => {
+                console.error(response);
+            }).catch(err => {
+                console.log(err);
+            });
         }
-    },
-    mounted() {
-        console.log('Mounted')
     }
 }
 </script>

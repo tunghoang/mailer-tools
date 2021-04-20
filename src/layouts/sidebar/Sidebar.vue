@@ -61,7 +61,7 @@ export default {
       {
         title: "Sent",
         icon: "mdi-email-send-outline",
-        to: "/list-email",
+        to: "/pages/list-email",
       },
 
       {

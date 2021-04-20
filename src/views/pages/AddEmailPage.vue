@@ -61,7 +61,6 @@
               <span class="advisorEmail"> {{ receipient.email }} </span>
               <button class="btn btn-danger ml-1" @click="removeReceipient" :value="receipient.email">Remove</button>
             </div>
-
         </div>
       </div>
   </div>
@@ -73,7 +72,6 @@
 import EmailDataService from "../../services/EmailDataService";
 import UserDataService from "../../services/UserDataService";
 const Mustache = require('mustache');
-import advisors from '../../assets/advisors.json';
 
 export default {
   name: "add-email",
@@ -100,7 +98,8 @@ export default {
         this.receipientList.forEach(email => {
           let content = Mustache.render(this.content, email);
           let data = {
-            receipient: email.address,
+            application: "spam-mailer",
+            receipient: email.email,
             subject: this.subject,
             content: content,
             queueTime: new Date().toISOString().split(".")[0],
@@ -143,7 +142,7 @@ export default {
         
         if (!exist) {
           index = this.advisors.findIndex(advisor => advisor.fullname == fullname);
-          this.receipientList.push(advisors[index]);
+          this.receipientList.push(this.advisors[index]);
         }
 
         this.advisorName = "";
@@ -157,12 +156,22 @@ export default {
     },
 
     getAllUsers() {
-      this.advisors = advisors;
-      console.log(advisors)
+      UserDataService.request(
+        "http://localhost:8000/advisors/",
+        "GET"
+      ).then(response => {
+        this.advisors = response.data;
+      }).catch(err => {
+        console.error(err);
+      })
     },
   },
 
   mounted() {
+    if (!this.$store.state.LoggedIn) {
+      this.$router.push('/sign-in');
+      return;
+    }
     this.getAllUsers();
   }
 };
@@ -185,8 +194,8 @@ export default {
 .list {
   border: 1px solid rgb(219, 205, 205);
   border-radius: 10px;
-  min-width: 300px;
   padding: 10px;
+  min-width: 300px;
   align-self: flex-start;
   margin-left: 20px;
   position: relative;
@@ -194,6 +203,7 @@ export default {
 .receiver_list {
   display: grid;
   grid-template-columns: auto;
+  min-width: max-content;
 }
 #receiver {
   border: 1px solid #333;

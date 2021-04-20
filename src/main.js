@@ -4,7 +4,9 @@ import vuetify from './plugins/vuetify'
 import router from './router'
 import store from './store'
 import './plugins/base'
+import VTooltip from 'v-tooltip'
 
+Vue.use(VTooltip);
 
 Vue.config.productionTip = false
 
